@@ -26,7 +26,7 @@ import Loading from "@/app/loading";
 
 export default function Page() {
   const [banks, setBanks] = useState([]);
-  const [newBank, setNewBank] = useState({ name: "", account: "" });
+  const [newBank, setNewBank] = useState({ name: "", account: "", title : "" });
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
@@ -52,6 +52,9 @@ export default function Page() {
     });
   }
 
+  function clearAll () {
+    setNewBank({account : "", name : "", title : ""})
+  }
   const handleAddBank = () => {
     const temp = banks.filter((item) => {
       if (item.name == newBank.name && item.account == newBank.account) {
@@ -71,14 +74,18 @@ export default function Page() {
       AddValue("banks", {
         name: newBank.name.toLocaleUpperCase(),
         account: newBank.account,
+        title : newBank.title
       }).then((val) => {
+       
         setLoading(false);
         if (val.type) {
+          
           setBanks((prevState) => {
             const newState = [...prevState];
             newState.push({
               name: newBank.name.toLocaleUpperCase(),
               account: newBank.account,
+              title : newBank.title,
               id: val.data.id,
             });
             return newState;
@@ -90,6 +97,7 @@ export default function Page() {
             duration: 3000,
             isClosable: true,
           });
+          clearAll()
         } else {
           toast({
             title: "Failed",
@@ -156,6 +164,16 @@ export default function Page() {
                   }))
                 }
               />
+               <Input
+                placeholder="Enter bank title"
+                value={newBank.title}
+                onChange={(e) =>
+                  setNewBank((prevState) => ({
+                    ...prevState,
+                    title: e.target.value,
+                  }))
+                }
+              />
               <Input
                 placeholder="Enter bank account number"
                 value={newBank.account}
@@ -167,6 +185,7 @@ export default function Page() {
                 }
               />
               <Button
+              isDisabled={!newBank.account || !newBank.name || !newBank.title}
                 colorScheme="teal"
                 onClick={() => {
                   setLoading(true);
@@ -188,6 +207,7 @@ export default function Page() {
                   <Tr>
                     <Th>Bank Name</Th>
                     <Th>Account#</Th>
+                    <Th>Title</Th>
                     <Th>Action</Th>
                   </Tr>
                 </Thead>
@@ -196,6 +216,7 @@ export default function Page() {
                     <Tr key={index}>
                       <Td>{bank.name}</Td>
                       <Td>{bank.account}</Td>
+                      <Td>{bank.title}</Td>
                       <Td>
                         <IconButton
                           aria-label="Delete Bank"

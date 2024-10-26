@@ -50,37 +50,13 @@ import { MdOutlineEmergencyShare } from "react-icons/md";
 export default function Sidebar({ children, LinkItems}) {
 
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const { isOpen: isOpenEmergency, onOpen: onOpenEmergency, onClose: onCloseEmergency } = useDisclosure()
-    // const { state: UserState, setUser } = useContext(UserContext)
     const checkSession = useCheckSession()
 
     useEffect(() => {
         checkSession()
     }, [])
 
-    // useEffect(() => {
-    //     if (UserState.value.data?.email) {
-    //         const q = query(collection(db, "emergency"), where("status", "==", "Pending"));
-    //         const unsubscribe = onSnapshot(q, (querySnapshot) => {
-    //             let list = [];
-    //             querySnapshot.forEach((doc) => {
-    //                 list.push({ ...doc.data(), 'id': doc.id });
-    //             });
-    //             if (UserState.value.data?.pair) {
-    //                 const myPair = [...UserState.value.data?.pair]
-    //                 myPair.map((eachUser) => {
-    //                     list.map((eachItem) => {
-    //                         if (eachUser.ref === eachItem.elderlyId) {
-    //                             setEmergency(eachItem)
-    //                             onOpenEmergency()
-    //                         }
-    //                     })
-    //                 })
-    //             }
-    //         });
-    //         return () => unsubscribe();
-    //     }
-    // }, [UserState.value.data]);
+ 
 
    
 

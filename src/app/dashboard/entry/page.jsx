@@ -16,6 +16,7 @@ import {
   IconButton,
   useColorModeValue,
   useToast,
+  HStack,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
@@ -41,6 +42,8 @@ const TransactionEntry = () => {
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [uniqueBanks, setUniqueBanks] = useState([]);
+  const [title, setTitle] = useState("");
+  const [balance, setBalance] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -88,6 +91,8 @@ const TransactionEntry = () => {
     setAmount("");
     setDate(null);
     setNote("");
+    setBalance("")
+    setTitle("")
   }
 
   const handleAddTransaction = () => {
@@ -98,6 +103,7 @@ const TransactionEntry = () => {
       note: note,
       date: new Date(date).getTime(),
       amount: Number(amount),
+      title: title,
     }).then((val) => {
       setLoading(false);
       if (val.type) {
@@ -112,6 +118,7 @@ const TransactionEntry = () => {
             date: new Date(date).getTime(),
             id: val.data.id,
             amount: Number(amount),
+            title: title,
           });
           return newState;
         });
@@ -188,28 +195,14 @@ const TransactionEntry = () => {
           </Heading>
 
           <Box
+            w={"100%"}
             bg={"white"}
             borderRadius="lg"
             boxShadow="md"
             p={8}
             mb={8}
-            maxW={"600px"}
           >
             <Stack spacing={4}>
-              <Select
-                value={transactionType}
-                onChange={(e) => setTransactionType(e.target.value)}
-                placeholder="Select transaction type"
-              >
-                <option value="Credit">Credit</option>
-                <option value="Debit">Debit</option>
-              </Select>
-              <Input
-                type="number"
-                placeholder="Amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
               <Select
                 isDisabled={uniqueBanks.length === 0}
                 value={bankAccount.name}
@@ -220,7 +213,7 @@ const TransactionEntry = () => {
                   });
                 }}
               >
-                <option value={""}>{"Select one"}</option>
+                <option value={""}>{"Select bank"}</option>
                 {uniqueBanks.map((eachBank, index) => (
                   <option key={index} value={eachBank.name}>
                     {eachBank.name}
@@ -228,27 +221,61 @@ const TransactionEntry = () => {
                 ))}
               </Select>
 
-              {bankAccount.name && (
-                <Select
-                  isDisabled={allBanks.length === 0}
-                  value={bankAccount.account}
-                  onChange={(e) => {
-                    setBankAccount((prevState) => ({
-                      ...prevState,
-                      account: e.target.value,
-                    }));
-                  }}
-                >
-                  <option value={""}>{"Select one"}</option>
-                  {allBanks
-                    .filter((item) => item.name === bankAccount.name)
-                    .map((eachBank, index) => (
-                      <option key={index} value={eachBank.account}>
-                        {eachBank.account}
-                      </option>
-                    ))}
-                </Select>
-              )}
+              <Select
+                isDisabled={!bankAccount.name}
+                value={bankAccount.account}
+                onChange={(e) => {
+                  setBankAccount((prevState) => ({
+                    ...prevState,
+                    account: e.target.value,
+                  }));
+                  const temp = allBanks.filter(
+                    (item) => item.account === e.target.value
+                  );
+                  let totalDebit = 0;
+                  let totalCredit = 0;
+                  transactions.map((item) => {
+                    if(item.account === e.target.value){
+                      if (item.type === "Debit") {
+                        totalDebit = totalDebit + item.amount;
+                      }
+                      if (item.type === "Credit") {
+                        totalCredit = totalCredit + item.amount;
+                      }
+                    }
+                  
+                  });
+                  setBalance(totalCredit - totalDebit);
+                  setTitle(temp[0].title);
+                }}
+              >
+                <option value={""}>{"Select account number"}</option>
+                {allBanks
+                  .filter((item) => item.name === bankAccount.name)
+                  .map((eachBank, index) => (
+                    <option key={index} value={eachBank.account}>
+                      {eachBank.account}
+                    </option>
+                  ))}
+              </Select>
+              <HStack>
+                <Input isDisabled={!title}  value={title ? title : "Select account number"} onChange={(e) => {}} />{" "}
+                <Input isDisabled={!balance} value={balance ? balance : "Select account number"} onChange={(e) => {}} />
+              </HStack>
+              <Input
+                type="number"
+                placeholder="Amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+              <Select
+                value={transactionType}
+                onChange={(e) => setTransactionType(e.target.value)}
+                placeholder="Select transaction type"
+              >
+                <option value="Credit">Credit</option>
+                <option value="Debit">Debit</option>
+              </Select>
 
               <Box
                 border={"1px solid"}
@@ -306,10 +333,11 @@ const TransactionEntry = () => {
             <Table variant="simple" colorScheme="gray">
               <Thead>
                 <Tr>
-                  <Th>Type</Th>
                   <Th>Bank</Th>
                   <Th>Account</Th>
+                  <Th>Title</Th>
                   <Th>Amount</Th>
+                  <Th>Type</Th>
                   {/* <Th>Made By</Th> */}
                   <Th>Date</Th>
                   <Th>Note</Th>
@@ -317,40 +345,45 @@ const TransactionEntry = () => {
                 </Tr>
               </Thead>
               <Tbody>
-                {transactions.sort((a,b)=> b.date - a.date).map((transaction) => (
-                  <Tr key={transaction.id}>
-                    <Td>{transaction.type}</Td>
-                    <Td>{transaction.name}</Td>
-                    <Td>{transaction.account}</Td>
-                    <Td>{transaction.amount}</Td>
-                    {/* <Td>{transaction.madeBy}</Td> */}
-                    <Td>
-                      {moment(new Date(transaction.date)).format("DD/MM/YYYY")}
-                    </Td>
-                    <Td>{transaction.note}</Td>
-                    <Td>
-                      <Stack direction="row" spacing={2}>
-                        {/* <IconButton
+                {transactions
+                  .sort((a, b) => b.date - a.date)
+                  .map((transaction) => (
+                    <Tr key={transaction.id}>
+                      <Td>{transaction.name}</Td>
+                      <Td>{transaction.account}</Td>
+                      <Td>{transaction.title}</Td>
+                      <Td>{transaction.amount}</Td>
+                      <Td>{transaction.type}</Td>
+                      {/* <Td>{transaction.madeBy}</Td> */}
+                      <Td>
+                        {moment(new Date(transaction.date)).format(
+                          "DD/MM/YYYY"
+                        )}
+                      </Td>
+                      <Td>{transaction.note}</Td>
+                      <Td>
+                        <Stack direction="row" spacing={2}>
+                          {/* <IconButton
                           icon={<FaEdit />}
                           colorScheme="blue"
                           variant="outline"
                           aria-label="Edit Transaction"
                           onClick={() => handleEditTransaction(transaction.id)}
                         /> */}
-                        <IconButton
-                          icon={<FaTrash />}
-                          colorScheme="red"
-                          variant="outline"
-                          aria-label="Delete Transaction"
-                          onClick={() => {
-                            setLoading(true);
-                            handleDeleteTransaction(transaction.id);
-                          }}
-                        />
-                      </Stack>
-                    </Td>
-                  </Tr>
-                ))}
+                          <IconButton
+                            icon={<FaTrash />}
+                            colorScheme="red"
+                            variant="outline"
+                            aria-label="Delete Transaction"
+                            onClick={() => {
+                              setLoading(true);
+                              handleDeleteTransaction(transaction.id);
+                            }}
+                          />
+                        </Stack>
+                      </Td>
+                    </Tr>
+                  ))}
               </Tbody>
             </Table>
           </Box>

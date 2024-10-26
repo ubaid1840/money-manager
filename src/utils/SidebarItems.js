@@ -43,6 +43,11 @@ const GetLinkItems = (role) => {
                     icon: GoGraph,
                     path: `/dashboard/record`,
                 },
+                {
+                    name: "Balance List",
+                    icon: GiSettingsKnobs,
+                    path: `/dashboard/balance`,
+                },
             ];
             
         default:
